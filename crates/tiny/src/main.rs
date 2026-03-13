@@ -86,17 +86,9 @@ fn run(
     servers: Vec<config::Server<String>>,
     defaults: config::Defaults,
     config_path: PathBuf,
-    log_dir: Option<PathBuf>,
+    log_dir: PathBuf,
 ) {
-    let debug_log_file = match log_dir.as_ref() {
-        Some(log_dir) => {
-            let mut log_dir = log_dir.clone();
-            log_dir.push(DEBUG_LOG_FILE);
-            log_dir
-        }
-        None => DEBUG_LOG_FILE.into(),
-    };
-    debug_logging::init(debug_log_file);
+    debug_logging::init(log_dir.join(DEBUG_LOG_FILE));
 
     // One task for each client to handle IRC events
     // One task for TUI events
@@ -122,23 +114,22 @@ fn run(
                 )
             })
         };
-        let logger: Option<Logger> =
-            log_dir.and_then(|log_dir| match Logger::new(log_dir, report_logger_error) {
-                Err(LoggerInitError::CouldNotCreateDir { dir_path, err }) => {
-                    tui.add_client_err_msg(
-                        &format!("Could not create log directory {dir_path:?}: {err}"),
-                        &MsgTarget::Server { serv: "mentions" },
-                    );
-                    tui.draw();
-                    None
-                }
-                Ok(logger) => {
-                    // Create "mentions" log file manually -- the tab is already created in the TUI so
-                    // we won't be creating a "mentions" file in the logger without this.
-                    logger.new_server_tab("mentions");
-                    Some(logger)
-                }
-            });
+        let logger: Option<Logger> = match Logger::new(log_dir, report_logger_error) {
+            Err(LoggerInitError::CouldNotCreateDir { dir_path, err }) => {
+                tui.add_client_err_msg(
+                    &format!("Could not create log directory {dir_path:?}: {err}"),
+                    &MsgTarget::Server { serv: "mentions" },
+                );
+                tui.draw();
+                None
+            }
+            Ok(logger) => {
+                // Create "mentions" log file manually -- the tab is already created in the TUI so
+                // we won't be creating a "mentions" file in the logger without this.
+                logger.new_server_tab("mentions");
+                Some(logger)
+            }
+        };
 
         let tui = UI::new(tui, logger);
 

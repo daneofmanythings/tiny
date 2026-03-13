@@ -69,8 +69,8 @@ defaults:
     # ignore: true
     # notify: [off|mentions|messages]
 
-# Location for chat logs.
-log_dir: "{}"
+# Location for chat logs. Default is $HOME/tiny_logs.
+# log_dir: "$XDG_CONFIG_HOME/tiny/logs"
 
 # Limits the maximum number of messages stored in each tab. Default is
 # unlimited.

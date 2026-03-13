@@ -109,7 +109,12 @@ pub(crate) struct Defaults {
 pub(crate) struct Config<P> {
     pub(crate) servers: Vec<Server<P>>,
     pub(crate) defaults: Defaults,
-    pub(crate) log_dir: Option<PathBuf>,
+    #[serde(default = "default_log_dir")]
+    pub(crate) log_dir: PathBuf,
+}
+
+fn default_log_dir() -> PathBuf {
+    return dirs::home_dir().unwrap().join("tiny_logs")
 }
 
 fn deser_trimmed_str<'de, D>(d: D) -> Result<String, D::Error>
@@ -458,12 +463,7 @@ You may want to edit {config_path:?} before re-running tiny."
 }
 
 fn get_default_config_yaml() -> String {
-    let mut log_dir = dirs::home_dir().unwrap();
-    log_dir.push("tiny_logs");
-    format!(
-        include_str!("../config.yml"),
-        log_dir.as_path().to_str().unwrap()
-    )
+    include_str!("../config.yml").to_string()
 }
 
 #[cfg(test)]
@@ -514,7 +514,7 @@ mod tests {
                 join: vec![],
                 tls: false,
             },
-            log_dir: None,
+            log_dir: default_log_dir(),
         };
 
         let errors = config.validate();
